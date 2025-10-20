@@ -1,7 +1,6 @@
 import sys
 from pathlib import Path
 
-# Manually add the 'src' directory to the Python path
 project_root = Path(__file__).resolve().parent
 src_path = project_root / 'src'
 sys.path.insert(0, str(src_path))
@@ -10,16 +9,13 @@ import streamlit as st
 import pandas as pd
 import yfinance as yf
 import joblib
-import datetime
-
-# --- FIX: Correct import paths for 'ta' library ---
 from ta.trend import SMAIndicator, EMAIndicator
 from ta.momentum import RSIIndicator
 from ta.volatility import BollingerBands
-# ----------------------------------------------------
-
 from sklearn.preprocessing import StandardScaler
+import datetime
 from stock_market_predictor.pipeline.backtesting_pipeline import BacktestingPipeline
+from stock_market_predictor.components.alerting import Alerting
 
 st.set_page_config(layout="wide")
 
@@ -45,7 +41,6 @@ def engineer_features(df):
     df['bb_low'] = bb_indicator.bollinger_lband()
     df['bb_width'] = bb_indicator.bollinger_wband()
     df.dropna(inplace=True)
-    
     features_for_clustering = df[['rsi', 'bb_width']].copy()
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features_for_clustering)
@@ -53,7 +48,6 @@ def engineer_features(df):
     return df
 
 st.title('📈 Stock Movement Predictor')
-
 ticker = st.text_input('Enter a Stock Ticker (e.g., AAPL, GOOGL, MSFT)', 'GOOGL').upper()
 
 if ticker:
@@ -81,6 +75,12 @@ if ticker:
             st.subheader('Prediction for Next Trading Day:')
             if prediction[0] == 1:
                 st.success('▲ UP')
+                with st.spinner('Sending UP prediction alert...'):
+                    alerting_system = Alerting()
+                    subject = f"Stock Prediction Alert: {ticker} is predicted to go UP"
+                    body = f"The model predicts that {ticker} will have a positive movement on the next trading day."
+                    alerting_system.send_email_alert(subject, body)
+                st.info("UP prediction alert has been sent via email.")
             else:
                 st.error('▼ DOWN')
             
