@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/7673b8447b6045d0ae1b62304dfff86e/artifacts
+end_time: 1760984143836
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 7673b8447b6045d0ae1b62304dfff86e
+run_name: wise-seal-695
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1760984143825
+status: 3
+tags: []
+user_id: pragyan2905

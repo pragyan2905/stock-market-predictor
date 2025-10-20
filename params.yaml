@@ -10,3 +10,9 @@ data_transformation:
   bb_window: 20
   bb_dev: 2
   kmeans_clusters: 3
+
+model_trainer:
+  objective: 'binary:logistic'
+  eval_metric: 'logloss'
+  random_state: 42
+  split_ratio: 0.8
