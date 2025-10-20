@@ -1,0 +1,12 @@
+data_ingestion:
+  ticker: GOOGL
+  start_date: '2020-01-01'
+  end_date: '2025-10-20'
+
+data_transformation:
+  sma_window: 14
+  ema_window: 14
+  rsi_window: 14
+  bb_window: 20
+  bb_dev: 2
+  kmeans_clusters: 3

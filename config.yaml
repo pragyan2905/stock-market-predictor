@@ -1,0 +1,10 @@
+artifacts_root: artifacts
+
+data_ingestion:
+  root_dir: artifacts/data_ingestion
+  raw_data_file: artifacts/data_ingestion/raw_data.csv
+
+data_transformation:
+  root_dir: artifacts/data_transformation
+  transformed_data_file: artifacts/data_transformation/transformed_data.csv
+  kmeans_model_path: artifacts/data_transformation/kmeans_model.joblib
