@@ -1,28 +1,28 @@
 import sys
 from pathlib import Path
 
-# --- FIX: Manually add the 'src' directory to the Python path ---
-# This ensures Streamlit can find your custom modules.
+# Manually add the 'src' directory to the Python path
 project_root = Path(__file__).resolve().parent
 src_path = project_root / 'src'
 sys.path.insert(0, str(src_path))
-# -----------------------------------------------------------------
 
 import streamlit as st
 import pandas as pd
 import yfinance as yf
 import joblib
+import datetime
+
+# --- FIX: Correct import paths for 'ta' library ---
 from ta.trend import SMAIndicator, EMAIndicator
 from ta.momentum import RSIIndicator
 from ta.volatility import BollingerBands
+# ----------------------------------------------------
+
 from sklearn.preprocessing import StandardScaler
-import datetime
 from stock_market_predictor.pipeline.backtesting_pipeline import BacktestingPipeline
 
-# --- Set page config ---
 st.set_page_config(layout="wide")
 
-# --- Load Models ---
 @st.cache_resource
 def load_models():
     model_path = project_root / 'artifacts' / 'model_trainer' / 'model.joblib'
@@ -33,7 +33,6 @@ def load_models():
 
 model, kmeans = load_models()
 
-# --- Feature Engineering ---
 @st.cache_data
 def engineer_features(df):
     if isinstance(df.columns, pd.MultiIndex):
@@ -46,13 +45,13 @@ def engineer_features(df):
     df['bb_low'] = bb_indicator.bollinger_lband()
     df['bb_width'] = bb_indicator.bollinger_wband()
     df.dropna(inplace=True)
+    
     features_for_clustering = df[['rsi', 'bb_width']].copy()
     scaler = StandardScaler()
     scaled_features = scaler.fit_transform(features_for_clustering)
     df['market_regime'] = kmeans.predict(scaled_features)
     return df
 
-# --- Streamlit App Layout ---
 st.title('📈 Stock Movement Predictor')
 
 ticker = st.text_input('Enter a Stock Ticker (e.g., AAPL, GOOGL, MSFT)', 'GOOGL').upper()
@@ -61,7 +60,7 @@ if ticker:
     st.header(f'Analysis for {ticker}')
     try:
         end_date = datetime.date.today()
-        start_date = end_date - datetime.timedelta(days=365*5) # Fetch 5 years for backtesting
+        start_date = end_date - datetime.timedelta(days=365*5)
         
         data = yf.download(ticker, start=start_date, end=end_date)
         
@@ -70,7 +69,10 @@ if ticker:
         else:
             featured_data = engineer_features(data.copy())
             
-            # --- Live Prediction Section ---
+            st.subheader('Recent Price Movement')
+            chart_data = featured_data[['Close', 'bb_high', 'bb_low']]
+            st.line_chart(chart_data)
+
             prediction_data = featured_data.iloc[-1:]
             model_features = model.get_booster().feature_names
             prediction_input = prediction_data[model_features]
@@ -82,7 +84,6 @@ if ticker:
             else:
                 st.error('▼ DOWN')
             
-            # --- Backtesting Section ---
             st.subheader('Historical Backtest')
             if st.button('Run Backtest on 5 Years of Data'):
                 with st.spinner('Running backtest...'):
@@ -92,7 +93,6 @@ if ticker:
                     st.metric(label="Total Strategy Return", value=f"{total_return:.2f}%")
                     
                     st.write("Strategy Performance vs. Buy-and-Hold")
-                    # Calculate buy-and-hold return
                     backtest_df['buy_hold_return'] = (1 + backtest_df['daily_return']).cumprod()
                     st.line_chart(backtest_df[['cumulative_strategy_return', 'buy_hold_return']])
 

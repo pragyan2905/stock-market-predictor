@@ -15,7 +15,8 @@ class ModelEvaluation:
         df = pd.read_csv(self.config.transformed_data_path)
         model = joblib.load(self.config.model_path)
 
-        X = df.drop(columns=['target', 'Date'])
+        # FIX: Exclude the leaky 'market_regime' feature from the test data
+        X = df.drop(columns=['target', 'Date', 'market_regime'])
         y = df['target']
         
         split_index = int(len(df) * self.config.split_ratio)
@@ -35,7 +36,6 @@ class ModelEvaluation:
         
         print(f"Metrics saved to {self.config.metrics_file_path}")
         
-        # Set tracking URI to ensure mlruns is created in the project root
         project_root = Path.cwd()
         mlflow.set_tracking_uri(f"file://{project_root.as_posix()}/mlruns")
         
